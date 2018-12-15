@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'client_authentication',
     'contacts',
+    'api',
 ]
 
 MIDDLEWARE = [
