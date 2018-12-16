@@ -39,6 +39,10 @@ python manage.py runserver
 
 Go through the API Doc and start using APIs
 
+#How to run testcase 
+
+pytest
+
 ############# If any issue for setup contact to +918123961170 ################
 
 
