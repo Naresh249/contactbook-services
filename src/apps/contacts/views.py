@@ -27,7 +27,7 @@ class ContactDetailsManager(APIView):
 					error='Contact is not available.',
 					code=status.HTTP_400_BAD_REQUEST)
 		page = int(request.query_params.get('page', 1))
-		paginator = Paginator(data, 5) # by default added 10
+		paginator = Paginator(data, 10) # by default added 10
 
 		try:
 			contacts = paginator.page(page)
@@ -37,8 +37,6 @@ class ContactDetailsManager(APIView):
 			return api_utils.response(
 					data={'message': 'Empty Page! Page limit Exceed no data.'}
 				)
-			# contacts = paginator.page(paginator.num_pages)
-		
 		return api_utils.response(data=contacts.object_list)
 
 	def post(self, request):
@@ -145,9 +143,20 @@ class SearchContact(APIView):
 	def get(self, request):
 		"""Fetching Contact Details for email or name"""
 		search_word = request.query_params.get('kw')
+		page = int(request.query_params.get('page', 1))
 		data = UserContactMapping.objects.filter(
 				(Q(contact_details__name__contains=search_word)\
 				 | Q(contact_details__contact__email__iexact=search_word)),
 				user_id=request.user.id, is_deleted=False)
-		response = contacts_serializer.FetchContactDetailsSerializers(data, many=True).data
-		return api_utils.response(data=response)
+		data = contacts_serializer.FetchContactDetailsSerializers(data, many=True).data
+		# Pagination
+		paginator = Paginator(data, 10)
+		try:
+			contacts = paginator.page(page)
+		except PageNotAnInteger:
+			contacts = paginator.page(1)
+		except EmptyPage:
+			return api_utils.response(
+					data={'message': 'Empty Page! Page limit Exceed no data.'}
+				)				
+		return api_utils.response(data=contacts.object_list)
