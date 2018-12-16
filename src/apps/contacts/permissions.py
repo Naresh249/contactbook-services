@@ -11,8 +11,11 @@ class IsContactBookUser(permissions.BasePermission):
 		if request.user.is_authenticated:
 			return True
 
-	def has_object_permission(self, request, view, obj):
+	def has_object_permission(self, request, view, UserContactMapping):
 		"""
 		Checking object level permission
 		"""
-		return False
+		if request.method in ['DELETE', 'PUT']:
+			if UserContactMapping.user_id != request.user.id:
+				return False
+		return True
