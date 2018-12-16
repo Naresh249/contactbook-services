@@ -1,5 +1,6 @@
 import copy
 
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
 from rest_framework import status
 from rest_framework.views import APIView
@@ -19,14 +20,25 @@ class ContactDetailsManager(APIView):
 
 	def get(self, request):
 		"""Fetching Contacts of User"""
-		import pdb;pdb.set_trace()
 		data = contacts_utils.fetch_user_contacts(request.user.id)
 		if not data:
 			return api_utils.response(
 					error='Contact is not available.',
 					code=status.HTTP_400_BAD_REQUEST)
+		page = int(request.query_params.get('page', 1))
+		paginator = Paginator(data, 5) # by default added 10
 
-		return api_utils.response(data=data)
+		try:
+			contacts = paginator.page(page)
+		except PageNotAnInteger:
+			contacts = paginator.page(1)
+		except EmptyPage:
+			return api_utils.response(
+					data={'message': 'Empty Page! Page limit Exceed no data.'}
+				)
+			# contacts = paginator.page(paginator.num_pages)
+		
+		return api_utils.response(data=contacts.object_list)
 
 	def post(self, request):
 		"""
