@@ -2,6 +2,7 @@ import copy
 
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.views import APIView
 
@@ -120,7 +121,7 @@ class ContactDetailsManager(APIView):
 			return api_utils.response(
 				error='Contact does not exists.', 
 				code=status.HTTP_400_BAD_REQUEST)
-		# Checking object level permission 
+		# Checking object level permission whether user is authorized to this action or not
 		self.check_object_permissions(request, user_contact_details)
 
 		# Deleting user contact
@@ -134,3 +135,19 @@ class ContactDetailsManager(APIView):
 			user_contact_details.save()
 		return api_utils.response(
 				data={'status': True, 'message': 'Sucessfully Deleted!'})
+
+class SearchContact(APIView):
+	"""Searching contact for email or name"""
+	
+	# Applying Permission of IsContactBookUser Class 
+	permission_classes = (contacts_permissions.IsContactBookUser,)
+
+	def get(self, request):
+		"""Fetching Contact Details for email or name"""
+		search_word = request.query_params.get('kw')
+		data = UserContactMapping.objects.filter(
+				(Q(contact_details__name__contains=search_word)\
+				 | Q(contact_details__contact__email__iexact=search_word)),
+				user_id=request.user.id, is_deleted=False)
+		response = contacts_serializer.FetchContactDetailsSerializers(data, many=True).data
+		return api_utils.response(data=response)

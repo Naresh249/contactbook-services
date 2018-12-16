@@ -18,4 +18,4 @@ class IsContactBookUser(permissions.BasePermission):
 		if request.method in ['DELETE', 'PUT']:
 			if UserContactMapping.user_id != request.user.id:
 				return False
-		return True
+			return True
